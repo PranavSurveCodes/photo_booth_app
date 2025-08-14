@@ -24,6 +24,7 @@ class PhotoTypeCricularButton extends StatelessWidget {
             height: 120,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
+              color: const Color.fromARGB(255, 255, 255, 255),
               border: Border.all(
                 color: isSelected ? Colors.purpleAccent : Colors.transparent,
                 width: 4,
@@ -40,10 +41,10 @@ class PhotoTypeCricularButton extends StatelessWidget {
             child: ClipOval(
               child: Image.asset(
                 photoType.url,
-                fit: BoxFit.cover,
+                fit: BoxFit.fitHeight,
                 width: 120,
                 height: 120,
-
+            
                 errorBuilder:
                     (context, error, stackTrace) => const Icon(
                       Icons.broken_image,
@@ -59,7 +60,7 @@ class PhotoTypeCricularButton extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 16,
-              color: isSelected ? Colors.purple : Colors.black87,
+              color: isSelected ? Colors.white : Colors.black87,
               fontWeight: FontWeight.w600,
             ),
           ),

@@ -6,7 +6,8 @@ import 'package:photo_booth/ui/camera/widgets/timer_slider.dart';
 class CaricatureScreen extends StatelessWidget {
   CaricatureScreen({super.key});
   final GetCameraController _getCameraController =
-      Get.find<GetCameraController>();
+      // Get.find<GetCameraController>();
+      Get.put(GetCameraController());
 
   @override
   Widget build(BuildContext context) {
