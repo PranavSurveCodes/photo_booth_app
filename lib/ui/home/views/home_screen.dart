@@ -10,7 +10,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Choose App'), centerTitle: true),
+      appBar: AppBar(title: Text('Choose Application'), centerTitle: true),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
