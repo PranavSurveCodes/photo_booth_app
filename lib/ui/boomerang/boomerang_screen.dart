@@ -74,12 +74,6 @@ class _BoomerangScreenState extends State<BoomerangScreen> {
       recordingSecondsLeft = 0;
     });
 
-    // Dispose after 1 frame (avoids build error)
-    Future.microtask(() {
-      _cameraController?.dispose();
-      _cameraController = null;
-    });
-
     setState(() {
       isRecording = false;
       isProcessing = true;
