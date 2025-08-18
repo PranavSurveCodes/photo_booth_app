@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
 import 'package:ffmpeg_kit_flutter_new/return_code.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart'; // ✅ SpinKit import
 
 class BoomerangScreen extends StatefulWidget {
   const BoomerangScreen({super.key});
@@ -49,7 +50,6 @@ class _BoomerangScreenState extends State<BoomerangScreen> {
       isRecording = true;
     });
 
-    // Countdown timer for recording
     for (int i = recordDuration; i > 0; i--) {
       if (!mounted) return;
       setState(() {
@@ -95,7 +95,6 @@ class _BoomerangScreenState extends State<BoomerangScreen> {
     boomerangPath =
         '${dir.path}/boomerang_${DateTime.now().millisecondsSinceEpoch}.mp4';
 
-    // Speed up 2x and reverse + concat for boomerang effect
     final cmd =
         '-i "$inputPath" -filter_complex "[0:v]setpts=0.5*PTS,reverse[vrev];[0:v]setpts=0.5*PTS[v];[v][vrev]concat=n=2:v=1:a=0" '
         '-c:v libx264 -preset veryfast -crf 18 -pix_fmt yuv420p -an "$boomerangPath"';
@@ -152,26 +151,39 @@ class _BoomerangScreenState extends State<BoomerangScreen> {
           Positioned.fill(
             child:
                 isProcessing
-                    ? const Center(child: CircularProgressIndicator())
+                    ? const Center(
+                      child: SpinKitFadingCircle(
+                        color: Colors.purple,
+                        size: 60.0,
+                      ),
+                    )
                     : showPreview
                     ? (_videoController != null &&
                             _videoController!.value.isInitialized)
                         ? VideoPlayer(_videoController!)
-                        : const Center(child: CircularProgressIndicator())
+                        : const Center(
+                          child: SpinKitFadingCircle(
+                            color: Colors.purple,
+                            size: 60.0,
+                          ),
+                        )
                     : (_cameraController != null &&
                         _cameraController!.value.isInitialized)
                     ? SafeArea(
                       child: AspectRatio(
                         aspectRatio:
                             _cameraController?.value.aspectRatio ?? 9 / 16,
-
                         child: CameraPreview(_cameraController!),
                       ),
                     )
-                    : const Center(child: CircularProgressIndicator()),
+                    : const Center(
+                      child: SpinKitFadingCircle(
+                        color: Colors.purple,
+                        size: 60.0,
+                      ),
+                    ),
           ),
 
-          // Countdown timer during recording
           if (isRecording)
             Positioned(
               top: 40,
