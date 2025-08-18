@@ -6,7 +6,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
 import 'package:ffmpeg_kit_flutter_new/return_code.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart'; // ✅ SpinKit import
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:animated_text_kit/animated_text_kit.dart';
 
 class BoomerangScreen extends StatefulWidget {
   const BoomerangScreen({super.key});
@@ -65,6 +66,20 @@ class _BoomerangScreenState extends State<BoomerangScreen> {
 
   Future<void> _stopRecording() async {
     final video = await _cameraController!.stopVideoRecording();
+
+    // ⚡ Keep camera alive during processing, dispose later
+    setState(() {
+      isRecording = false;
+      isProcessing = true;
+      recordingSecondsLeft = 0;
+    });
+
+    // Dispose after 1 frame (avoids build error)
+    Future.microtask(() {
+      _cameraController?.dispose();
+      _cameraController = null;
+    });
+
     setState(() {
       isRecording = false;
       isProcessing = true;
@@ -111,6 +126,10 @@ class _BoomerangScreenState extends State<BoomerangScreen> {
 
     if (ReturnCode.isSuccess(returnCode)) {
       print("✅ Boomerang created: $boomerangPath");
+
+      // ⏳ Artificial delay so user can enjoy fun texts
+      // You have 4 texts × 2s each = 8s total cycle
+      await Future.delayed(const Duration(seconds: 8));
     } else {
       print("❌ FFmpeg failed with code: $returnCode");
       boomerangPath = null;
@@ -152,9 +171,13 @@ class _BoomerangScreenState extends State<BoomerangScreen> {
             child:
                 isProcessing
                     ? const Center(
-                      child: SpinKitFadingCircle(
-                        color: Colors.purple,
-                        size: 60.0,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SpinKitFadingCircle(color: Colors.purple, size: 60.0),
+                          SizedBox(height: 20),
+                          _LoadingText(), // fun animated text
+                        ],
                       ),
                     )
                     : showPreview
@@ -244,6 +267,77 @@ class _BoomerangScreenState extends State<BoomerangScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+// Animated fun text widget with random gradient texts
+class _LoadingText extends StatefulWidget {
+  const _LoadingText();
+
+  @override
+  State<_LoadingText> createState() => _LoadingTextState();
+}
+
+class _LoadingTextState extends State<_LoadingText> {
+  final List<String> funTexts = [
+    "⏪ Rewinding reality...",
+    "🔄 Making your moment loop forever...",
+    "🎞️ Spinning frames like a DJ...",
+    "✨ Adding boomerang magic...",
+    "🎥 Back, forth... back, forth...",
+    "🌀 Infinite vibes loading...",
+    "😎 Cool loop in progress...",
+    "🎉 Doubling the fun...",
+    "💫 Your moment just bounced back...",
+    "🎯 Perfect rewind coming up...",
+    "Adding some magic ✨",
+    "Looping it back 🔄",
+    "Making it boomerang 🎥",
+    "Final touch-ups 🎶",
+    "Hold tight, magic loading 🎩",
+    "Your moment is bouncing back 🕺",
+    "Boomerang-ing like a pro 🎬",
+    "Hang on, it’s almost boomerang o’clock ⏰",
+    "Just a few more spins 🔄",
+  ];
+
+  late List<String> randomTexts;
+
+  @override
+  void initState() {
+    super.initState();
+    funTexts.shuffle(); // shuffle once
+    randomTexts = funTexts.take(6).toList(); // pick 6 random ones
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedTextKit(
+      repeatForever: true,
+      animatedTexts:
+          randomTexts
+              .map(
+                (text) => FadeAnimatedText(
+                  text,
+                  textStyle: _gradientTextStyle(),
+                  duration: const Duration(seconds: 2),
+                ),
+              )
+              .toList(),
+    );
+  }
+
+  /// Gradient text style (Purple → Pink)
+  TextStyle _gradientTextStyle() {
+    return TextStyle(
+      fontSize: 18,
+      fontWeight: FontWeight.w600,
+      foreground:
+          Paint()
+            ..shader = const LinearGradient(
+              colors: [Colors.purple, Colors.pinkAccent],
+            ).createShader(const Rect.fromLTWH(0, 0, 200, 70)),
     );
   }
 }

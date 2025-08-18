@@ -45,6 +45,8 @@ dependencies:
   share_plus: ^11.0.0
   get: ^4.7.2
   flutter_spinkit: ^5.2.2
+  animated_text_kit: ^4.2.2
+  loading_animation_widget: ^1.2.0
 
 dev_dependencies:
   flutter_test:
