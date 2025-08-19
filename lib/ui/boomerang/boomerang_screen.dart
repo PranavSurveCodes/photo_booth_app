@@ -108,24 +108,24 @@ class _BoomerangScreenState extends State<BoomerangScreen> {
         '-i "$inputPath" -filter_complex "[0:v]setpts=0.5*PTS,reverse[vrev];[0:v]setpts=0.5*PTS[v];[v][vrev]concat=n=2:v=1:a=0" '
         '-c:v libx264 -preset veryfast -crf 18 -pix_fmt yuv420p -an "$boomerangPath"';
 
-    print("🎯 Running FFmpeg command: $cmd");
+    debugPrint("🎯 Running FFmpeg command: $cmd");
 
     final session = await FFmpegKit.execute(cmd);
     final returnCode = await session.getReturnCode();
 
     final logs = await session.getAllLogs();
     for (var log in logs) {
-      print("FFmpeg: ${log.getMessage()}");
+      debugPrint("FFmpeg: ${log.getMessage()}");
     }
 
     if (ReturnCode.isSuccess(returnCode)) {
-      print("✅ Boomerang created: $boomerangPath");
+      debugPrint("✅ Boomerang created: $boomerangPath");
 
       // ⏳ Artificial delay so user can enjoy fun texts
       // You have 4 texts × 2s each = 8s total cycle
       await Future.delayed(const Duration(seconds: 8));
     } else {
-      print("❌ FFmpeg failed with code: $returnCode");
+      debugPrint("❌ FFmpeg failed with code: $returnCode");
       boomerangPath = null;
     }
   }
@@ -140,16 +140,18 @@ class _BoomerangScreenState extends State<BoomerangScreen> {
       });
   }
 
-  void _shareBoomerang() {
+  Future<void> _shareBoomerang() async {
     if (boomerangPath != null) {
-      Share.shareXFiles([
-        XFile(boomerangPath!),
-      ], text: "Check out my boomerang!");
+      await Share.share(
+        "Check out my boomerang!",
+        sharePositionOrigin: Rect.fromLTWH(0, 0, 1, 1),
+      );
     }
   }
 
   Future<void> _saveBoomerang() async {
     if (boomerangPath == null || !File(boomerangPath!).existsSync()) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("No boomerang to save")));
@@ -172,11 +174,12 @@ class _BoomerangScreenState extends State<BoomerangScreen> {
 
       await File(boomerangPath!).copy(newPath);
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("🎉 Boomerang saved successfully!")),
       );
     } catch (e) {
-      print("❌ Error saving boomerang: $e");
+      debugPrint("❌ Error saving boomerang: $e");
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Failed to save boomerang")));
