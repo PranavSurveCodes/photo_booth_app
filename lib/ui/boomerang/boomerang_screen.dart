@@ -148,6 +148,41 @@ class _BoomerangScreenState extends State<BoomerangScreen> {
     }
   }
 
+  Future<void> _saveBoomerang() async {
+    if (boomerangPath == null || !File(boomerangPath!).existsSync()) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("No boomerang to save")));
+      return;
+    }
+
+    try {
+      // Force Downloads directory on Android
+      final Directory downloadsDir = Directory(
+        "/storage/emulated/0/Download/Boomerang",
+      );
+
+      if (!downloadsDir.existsSync()) {
+        downloadsDir.createSync(recursive: true);
+      }
+
+      final String fileName =
+          "boomerang_${DateTime.now().millisecondsSinceEpoch}.mp4";
+      final String newPath = "${downloadsDir.path}/$fileName";
+
+      await File(boomerangPath!).copy(newPath);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("🎉 Boomerang saved successfully!")),
+      );
+    } catch (e) {
+      print("❌ Error saving boomerang: $e");
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Failed to save boomerang")));
+    }
+  }
+
   @override
   void dispose() {
     _cameraController?.dispose();
@@ -253,6 +288,11 @@ class _BoomerangScreenState extends State<BoomerangScreen> {
                     ElevatedButton(
                       onPressed: _shareBoomerang,
                       child: const Text("Share"),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: _saveBoomerang,
+                      child: const Text("Save"),
                     ),
                   ],
                 ],
