@@ -460,7 +460,7 @@ class _LoadingTextState extends State<_LoadingText> {
   void initState() {
     super.initState();
     funTexts.shuffle(); // shuffle once
-    randomTexts = funTexts.take(6).toList(); // pick 6 random ones
+    randomTexts = funTexts.take(3).toList(); // pick 3 random ones
   }
 
   @override
