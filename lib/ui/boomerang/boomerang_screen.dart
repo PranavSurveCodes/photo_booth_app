@@ -149,6 +149,107 @@ class _BoomerangScreenState extends State<BoomerangScreen> {
     }
   }
 
+  Future<bool> _onWillPop() async {
+    if (showPreview) {
+      final result = await showGeneralDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        barrierLabel: "Discard Boomerang",
+        transitionDuration: const Duration(milliseconds: 300),
+        pageBuilder: (context, animation1, animation2) {
+          return Align(
+            alignment: Alignment.center,
+            child: Material(
+              color: Colors.transparent,
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      "Discard Boomerang?",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.purple,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      "Going back will discard your boomerang preview.",
+                      style: TextStyle(fontSize: 16, color: Colors.black87),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Colors.purple),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 12,
+                            ),
+                          ),
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: const Text(
+                            "Cancel",
+                            style: TextStyle(color: Colors.purple),
+                          ),
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.purple,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 12,
+                            ),
+                          ),
+                          onPressed: () => Navigator.of(context).pop(true),
+                          child: const Text("Discard"),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+        transitionBuilder: (context, animation1, animation2, child) {
+          return FadeTransition(
+            opacity: CurvedAnimation(parent: animation1, curve: Curves.easeOut),
+            child: ScaleTransition(
+              scale: CurvedAnimation(
+                parent: animation1,
+                curve: Curves.easeOutBack,
+              ),
+              child: child,
+            ),
+          );
+        },
+      );
+
+      return result ?? false;
+    } else {
+      return true;
+    }
+  }
+
   Future<void> _saveBoomerang() async {
     if (boomerangPath == null || !File(boomerangPath!).existsSync()) {
       if (!mounted) return;
@@ -195,114 +296,128 @@ class _BoomerangScreenState extends State<BoomerangScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Boomerang")),
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child:
-                isProcessing
-                    ? const Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SpinKitFadingCircle(color: Colors.purple, size: 60.0),
-                          SizedBox(height: 20),
-                          _LoadingText(), // fun animated text
-                        ],
-                      ),
-                    )
-                    : showPreview
-                    ? (_videoController != null &&
-                            _videoController!.value.isInitialized)
-                        ? VideoPlayer(_videoController!)
-                        : const Center(
-                          child: SpinKitFadingCircle(
-                            color: Colors.purple,
-                            size: 60.0,
-                          ),
-                        )
-                    : (_cameraController != null &&
-                        _cameraController!.value.isInitialized)
-                    ? SafeArea(
-                      child: AspectRatio(
-                        aspectRatio:
-                            _cameraController?.value.aspectRatio ?? 9 / 16,
-                        child: CameraPreview(_cameraController!),
-                      ),
-                    )
-                    : const Center(
-                      child: SpinKitFadingCircle(
-                        color: Colors.purple,
-                        size: 60.0,
-                      ),
-                    ),
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text("Boomerang"),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () async {
+              final shouldLeave = await _onWillPop();
+              if (shouldLeave) Navigator.of(context).pop();
+            },
           ),
-
-          if (isRecording)
-            Positioned(
-              top: 40,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.black54,
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: Text(
-                    recordingSecondsLeft.toString(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
+        ),
+        body: Stack(
+          children: [
+            Positioned.fill(
+              child:
+                  isProcessing
+                      ? const Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SpinKitFadingCircle(
+                              color: Colors.purple,
+                              size: 60.0,
+                            ),
+                            SizedBox(height: 20),
+                            _LoadingText(),
+                          ],
+                        ),
+                      )
+                      : showPreview
+                      ? (_videoController != null &&
+                              _videoController!.value.isInitialized)
+                          ? VideoPlayer(_videoController!)
+                          : const Center(
+                            child: SpinKitFadingCircle(
+                              color: Colors.purple,
+                              size: 60.0,
+                            ),
+                          )
+                      : (_cameraController != null &&
+                          _cameraController!.value.isInitialized)
+                      ? SafeArea(
+                        child: AspectRatio(
+                          aspectRatio:
+                              _cameraController?.value.aspectRatio ?? 9 / 16,
+                          child: CameraPreview(_cameraController!),
+                        ),
+                      )
+                      : const Center(
+                        child: SpinKitFadingCircle(
+                          color: Colors.purple,
+                          size: 60.0,
+                        ),
+                      ),
+            ),
+            if (isRecording)
+              Positioned(
+                top: 40,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: Text(
+                      recordingSecondsLeft.toString(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (!showPreview && !isProcessing)
-                    FloatingActionButton(
-                      backgroundColor: Colors.purple,
-                      onPressed: isRecording ? _stopRecording : _startRecording,
-                      child: Icon(isRecording ? Icons.stop : Icons.videocam),
-                    ),
-                  if (showPreview && !isProcessing) ...[
-                    ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          showPreview = false;
-                          _videoController?.dispose();
-                          _initCamera();
-                        });
-                      },
-                      child: const Text("Retake"),
-                    ),
-                    const SizedBox(width: 12),
-                    ElevatedButton(
-                      onPressed: _shareBoomerang,
-                      child: const Text("Share"),
-                    ),
-                    const SizedBox(width: 12),
-                    ElevatedButton(
-                      onPressed: _saveBoomerang,
-                      child: const Text("Save"),
-                    ),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (!showPreview && !isProcessing)
+                      FloatingActionButton(
+                        backgroundColor: Colors.purple,
+                        onPressed:
+                            isRecording ? _stopRecording : _startRecording,
+                        child: Icon(isRecording ? Icons.stop : Icons.videocam),
+                      ),
+                    if (showPreview && !isProcessing) ...[
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            showPreview = false;
+                            _videoController?.dispose();
+                            _initCamera();
+                          });
+                        },
+                        child: const Text("Retake"),
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton(
+                        onPressed: _shareBoomerang,
+                        child: const Text("Share"),
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton(
+                        onPressed: _saveBoomerang,
+                        child: const Text("Save"),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
