@@ -67,6 +67,13 @@ class _BoomerangScreenState extends State<BoomerangScreen> {
   Future<void> _stopRecording() async {
     final video = await _cameraController!.stopVideoRecording();
 
+    // ⚡ Keep camera alive during processing, dispose later
+    setState(() {
+      isRecording = false;
+      isProcessing = true;
+      recordingSecondsLeft = 0;
+    });
+
     setState(() {
       isRecording = false;
       isProcessing = true;
@@ -117,6 +124,7 @@ class _BoomerangScreenState extends State<BoomerangScreen> {
       debugPrint("✅ Boomerang created: $boomerangPath");
 
       // ⏳ Artificial delay so user can enjoy fun texts
+      // You have 4 texts × 2s each = 8s total cycle
       await Future.delayed(const Duration(seconds: 8));
     } else {
       debugPrint("❌ FFmpeg failed with code: $returnCode");
@@ -136,9 +144,9 @@ class _BoomerangScreenState extends State<BoomerangScreen> {
 
   Future<void> _shareBoomerang() async {
     if (boomerangPath != null) {
-      await Share.shareXFiles(
-        [XFile(boomerangPath!)],
-        text: "Check out my boomerang!",
+      await Share.share(
+        "Check out my boomerang!",
+        sharePositionOrigin: Rect.fromLTWH(0, 0, 1, 1),
       );
     }
   }
@@ -254,6 +262,7 @@ class _BoomerangScreenState extends State<BoomerangScreen> {
     }
 
     try {
+      // Force Downloads directory on Android
       final Directory downloadsDir = Directory(
         "/storage/emulated/0/Download/Boomerang",
       );
@@ -270,7 +279,7 @@ class _BoomerangScreenState extends State<BoomerangScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("🎉 Boomerang saved successfully!")),
+        SnackBar(content: Text("🎉 Boomerang saved successfully!")),
       );
     } catch (e) {
       debugPrint("❌ Error saving boomerang: $e");
@@ -313,46 +322,46 @@ class _BoomerangScreenState extends State<BoomerangScreen> {
         body: Stack(
           children: [
             Positioned.fill(
-              child: isProcessing
-                  ? const Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SpinKitFadingCircle(
-                            color: Colors.purple,
-                            size: 60.0,
-                          ),
-                          SizedBox(height: 20),
-                          _LoadingText(),
-                        ],
-                      ),
-                    )
-                  : showPreview
+              child:
+                  isProcessing
+                      ? const Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SpinKitFadingCircle(
+                              color: Colors.purple,
+                              size: 60.0,
+                            ),
+                            SizedBox(height: 20),
+                            _LoadingText(),
+                          ],
+                        ),
+                      )
+                      : showPreview
                       ? (_videoController != null &&
                               _videoController!.value.isInitialized)
                           ? VideoPlayer(_videoController!)
                           : const Center(
-                              child: SpinKitFadingCircle(
-                                color: Colors.purple,
-                                size: 60.0,
-                              ),
-                            )
-                      : (_cameraController != null &&
-                              _cameraController!.value.isInitialized)
-                          ? SafeArea(
-                              child: AspectRatio(
-                                aspectRatio:
-                                    _cameraController?.value.aspectRatio ??
-                                        9 / 16,
-                                child: CameraPreview(_cameraController!),
-                              ),
-                            )
-                          : const Center(
-                              child: SpinKitFadingCircle(
-                                color: Colors.purple,
-                                size: 60.0,
-                              ),
+                            child: SpinKitFadingCircle(
+                              color: Colors.purple,
+                              size: 60.0,
                             ),
+                          )
+                      : (_cameraController != null &&
+                          _cameraController!.value.isInitialized)
+                      ? SafeArea(
+                        child: AspectRatio(
+                          aspectRatio:
+                              _cameraController?.value.aspectRatio ?? 9 / 16,
+                          child: CameraPreview(_cameraController!),
+                        ),
+                      )
+                      : const Center(
+                        child: SpinKitFadingCircle(
+                          color: Colors.purple,
+                          size: 60.0,
+                        ),
+                      ),
             ),
             if (isRecording)
               Positioned(
@@ -468,26 +477,29 @@ class _LoadingTextState extends State<_LoadingText> {
   Widget build(BuildContext context) {
     return AnimatedTextKit(
       repeatForever: true,
-      animatedTexts: randomTexts
-          .map(
-            (text) => FadeAnimatedText(
-              text,
-              textStyle: _gradientTextStyle(),
-              duration: const Duration(seconds: 2),
-            ),
-          )
-          .toList(),
+      animatedTexts:
+          randomTexts
+              .map(
+                (text) => FadeAnimatedText(
+                  text,
+                  textStyle: _gradientTextStyle(),
+                  duration: const Duration(seconds: 2),
+                ),
+              )
+              .toList(),
     );
   }
 
+  /// Gradient text style (Purple → Pink)
   TextStyle _gradientTextStyle() {
     return TextStyle(
       fontSize: 18,
       fontWeight: FontWeight.w600,
-      foreground: Paint()
-        ..shader = const LinearGradient(
-          colors: [Colors.purple, Colors.pinkAccent],
-        ).createShader(const Rect.fromLTWH(0, 0, 300, 100)),
+      foreground:
+          Paint()
+            ..shader = const LinearGradient(
+              colors: [Colors.purple, Colors.pinkAccent],
+            ).createShader(const Rect.fromLTWH(0, 0, 200, 70)),
     );
   }
 }
