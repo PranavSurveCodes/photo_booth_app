@@ -9,14 +9,14 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
-    
+
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.purple),
         appBarTheme: AppBarTheme(
           backgroundColor: Colors.purple,
           foregroundColor: Colors.white,
         ),
-        bottomAppBarTheme: BottomAppBarTheme(
+        bottomAppBarTheme: BottomAppBarThemeData(
           color: Colors.purple,
           height: 66,
         ),
@@ -28,7 +28,7 @@ class MyApp extends StatelessWidget {
           style: ButtonStyle(iconColor: WidgetStatePropertyAll(Colors.white)),
         ),
       ),
-      getPages:AppRoutes().routes,
+      getPages: AppRoutes().routes,
     );
   }
 }

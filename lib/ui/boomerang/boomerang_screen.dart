@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:video_player/video_player.dart';
@@ -74,11 +75,11 @@ class _BoomerangScreenState extends State<BoomerangScreen> {
       recordingSecondsLeft = 0;
     });
 
-    setState(() {
-      isRecording = false;
-      isProcessing = true;
-      recordingSecondsLeft = 0;
-    });
+    // setState(() {
+    //   isRecording = false;
+    //   isProcessing = true;
+    //   recordingSecondsLeft = 0;
+    // });
 
     await _processBoomerang(video.path);
 
@@ -123,9 +124,8 @@ class _BoomerangScreenState extends State<BoomerangScreen> {
     if (ReturnCode.isSuccess(returnCode)) {
       debugPrint("✅ Boomerang created: $boomerangPath");
 
-      // ⏳ Artificial delay so user can enjoy fun texts
-      // You have 4 texts × 2s each = 8s total cycle
-      await Future.delayed(const Duration(seconds: 8));
+      // ❗ Short artificial delay for fun loading texts
+      await Future.delayed(const Duration(seconds: 2));
     } else {
       debugPrint("❌ FFmpeg failed with code: $returnCode");
       boomerangPath = null;
@@ -167,8 +167,19 @@ class _BoomerangScreenState extends State<BoomerangScreen> {
                 margin: const EdgeInsets.symmetric(horizontal: 20),
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF8E2DE2), Color(0xFF4A00E0)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 10,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -178,51 +189,79 @@ class _BoomerangScreenState extends State<BoomerangScreen> {
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: Colors.purple,
+                        color: Colors.white,
                       ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 12),
                     const Text(
                       "Going back will discard your boomerang preview.",
-                      style: TextStyle(fontSize: 16, color: Colors.black87),
+                      style: TextStyle(fontSize: 16, color: Colors.white70),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 20),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Colors.purple),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 12,
-                            ),
+                        // Cancel button
+                        Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.white),
                           ),
-                          onPressed: () => Navigator.of(context).pop(false),
-                          child: const Text(
-                            "Cancel",
-                            style: TextStyle(color: Colors.purple),
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
+                              ),
+                            ),
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: const Text(
+                              "Cancel",
+                              style: TextStyle(color: Colors.white),
+                            ),
                           ),
                         ),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.purple,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 12,
+                        // Discard button
+                        Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            gradient: LinearGradient(
+                              colors: [
+                                Color(0xFF9B3DEB),
+                                Color(0xFF6A00E0),
+                              ], // Purple → Violet
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
                           ),
-                          onPressed: () => Navigator.of(context).pop(true),
-                          child: const Text("Discard"),
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
+                              ),
+                            ),
+                            onPressed: () => Navigator.of(context).pop(true),
+                            child: const Text(
+                              "Discard",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -252,51 +291,6 @@ class _BoomerangScreenState extends State<BoomerangScreen> {
     }
   }
 
-  Future<void> _saveBoomerang() async {
-    if (boomerangPath == null || !File(boomerangPath!).existsSync()) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("No boomerang to save")));
-      return;
-    }
-
-    try {
-      // Force Downloads directory on Android
-      final Directory downloadsDir = Directory(
-        "/storage/emulated/0/Download/Boomerang",
-      );
-
-      if (!downloadsDir.existsSync()) {
-        downloadsDir.createSync(recursive: true);
-      }
-
-      final String fileName =
-          "boomerang_${DateTime.now().millisecondsSinceEpoch}.mp4";
-      final String newPath = "${downloadsDir.path}/$fileName";
-
-      await File(boomerangPath!).copy(newPath);
-
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("🎉 Boomerang saved successfully!")),
-      );
-    } catch (e) {
-      debugPrint("❌ Error saving boomerang: $e");
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Failed to save boomerang")));
-    }
-  }
-
-  @override
-  void dispose() {
-    _cameraController?.dispose();
-    _videoController?.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -308,10 +302,16 @@ class _BoomerangScreenState extends State<BoomerangScreen> {
         }
       },
       child: Scaffold(
+        extendBodyBehindAppBar: true,
         appBar: AppBar(
-          title: const Text("Boomerang"),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          title: const Text(
+            "Boomerang",
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          ),
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () async {
               final shouldLeave = await _onWillPop();
               if (!mounted) return;
@@ -319,126 +319,277 @@ class _BoomerangScreenState extends State<BoomerangScreen> {
             },
           ),
         ),
-        body: Stack(
-          children: [
-            Positioned.fill(
-              child:
-                  isProcessing
-                      ? const Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SpinKitFadingCircle(
-                              color: Colors.purple,
-                              size: 60.0,
-                            ),
-                            SizedBox(height: 20),
-                            _LoadingText(),
-                          ],
-                        ),
-                      )
-                      : showPreview
-                      ? (_videoController != null &&
-                              _videoController!.value.isInitialized)
-                          ? VideoPlayer(_videoController!)
-                          : const Center(
-                            child: SpinKitFadingCircle(
-                              color: Colors.purple,
-                              size: 60.0,
-                            ),
-                          )
-                      : (_cameraController != null &&
-                          _cameraController!.value.isInitialized)
-                      ? SafeArea(
-                        child: AspectRatio(
-                          aspectRatio:
-                              _cameraController?.value.aspectRatio ?? 9 / 16,
-                          child: CameraPreview(_cameraController!),
-                        ),
-                      )
-                      : const Center(
-                        child: SpinKitFadingCircle(
-                          color: Colors.purple,
-                          size: 60.0,
-                        ),
-                      ),
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF8E2DE2), Color(0xFF4A00E0)], // Purple → Violet
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
-            if (isRecording)
-              Positioned(
-                top: 40,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.black54,
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: Text(
-                      recordingSecondsLeft.toString(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
+          ),
+          child: Stack(
+            children: [
+              // Camera / Preview / Processing loader
+              Positioned.fill(
+                child:
+                    isProcessing
+                        ? const Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              BoomerangLoader(), // <-- our new loader
+                              SizedBox(height: 20),
+                              _LoadingText(), // gradient text below loader
+                            ],
+                          ),
+                        )
+                        : showPreview
+                        ? (_videoController != null &&
+                                _videoController!.value.isInitialized)
+                            ? ClipRRect(
+                              borderRadius: BorderRadius.circular(20),
+                              child: VideoPlayer(_videoController!),
+                            )
+                            : const Center(child: BoomerangLoader())
+                        : (_cameraController != null &&
+                            _cameraController!.value.isInitialized)
+                        ? SafeArea(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(20),
+                            child: AspectRatio(
+                              aspectRatio:
+                                  _cameraController?.value.aspectRatio ??
+                                  9 / 16,
+                              child: CameraPreview(_cameraController!),
+                            ),
+                          ),
+                        )
+                        : const Center(child: BoomerangLoader()),
+              ),
+
+              // Recording countdown
+              if (isRecording)
+                Positioned(
+                  top: MediaQuery.of(context).padding.top + 80,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.black54,
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: Text(
+                        recordingSecondsLeft.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (!showPreview && !isProcessing)
-                      FloatingActionButton(
-                        backgroundColor: Colors.purple,
-                        onPressed:
-                            isRecording ? _stopRecording : _startRecording,
-                        child: Icon(isRecording ? Icons.stop : Icons.videocam),
-                      ),
-                    if (showPreview && !isProcessing) ...[
-                      ElevatedButton(
-                        onPressed: () {
+
+              // Action buttons
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (!showPreview && !isProcessing)
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF8E2DE2), Color(0xFF4A00E0)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(28),
+                          ),
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              foregroundColor: Colors.white,
+                              shadowColor: Colors.transparent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(28),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 28,
+                                vertical: 14,
+                              ),
+                            ),
+                            onPressed:
+                                isRecording ? _stopRecording : _startRecording,
+                            child: Icon(
+                              isRecording ? Icons.stop : Icons.videocam,
+                              size: 28,
+                            ),
+                          ),
+                        ),
+
+                      if (showPreview && !isProcessing) ...[
+                        _buildActionButton("Retake", Icons.refresh, () {
                           setState(() {
                             showPreview = false;
                             _videoController?.dispose();
                             _initCamera();
                           });
-                        },
-                        child: const Text("Retake"),
-                      ),
-                      const SizedBox(width: 12),
-                      ElevatedButton(
-                        onPressed: _shareBoomerang,
-                        child: const Text("Share"),
-                      ),
-                      const SizedBox(width: 12),
-                      ElevatedButton(
-                        onPressed: _saveBoomerang,
-                        child: const Text("Save"),
-                      ),
+                        }),
+                        const SizedBox(width: 12),
+                        _buildActionButton(
+                          "Share",
+                          Icons.share,
+                          _shareBoomerang,
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 🔘 Common styled button
+  Widget _buildActionButton(String label, IconData icon, VoidCallback onTap) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF8E2DE2), Color(0xFF4A00E0)], // Purple → Violet
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: ElevatedButton.icon(
+        onPressed: onTap,
+        icon: Icon(icon, color: Colors.white),
+        label: Text(
+          label,
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         ),
       ),
     );
   }
 }
 
-// Animated fun text widget with random gradient texts
+// Animated fun text widget with gradient texts
 class _LoadingText extends StatefulWidget {
   const _LoadingText();
 
   @override
   State<_LoadingText> createState() => _LoadingTextState();
+}
+
+class BoomerangLoader extends StatefulWidget {
+  const BoomerangLoader({super.key});
+
+  @override
+  State<BoomerangLoader> createState() => _BoomerangLoaderState();
+}
+
+class _BoomerangLoaderState extends State<BoomerangLoader>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Widget _buildArrow(double angle) {
+    return Transform.rotate(
+      angle: angle,
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: Icon(Icons.loop_rounded, size: 20, color: Colors.white),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 120,
+      height: 120,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Pulsing camera icon in center
+          ScaleTransition(
+            scale: Tween<double>(begin: 0.8, end: 1.2).animate(
+              CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+            ),
+            child: Icon(
+              Icons.camera_alt_rounded,
+              size: 50,
+              color: Colors.white,
+            ),
+          ),
+          // Multiple rotating arrows around camera
+          AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              double rotation = _controller.value * 2 * 3.1415926;
+              return Stack(
+                children: List.generate(6, (index) {
+                  double angle = rotation + index * (3.1415926 / 3);
+                  return _buildArrow(angle);
+                }),
+              );
+            },
+          ),
+          // Sparkles around
+          AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              double t = _controller.value * 2 * 3.1415926;
+              return Stack(
+                children: List.generate(5, (i) {
+                  double angle = i * (2 * 3.1415926 / 5) + t;
+                  double radius = 60;
+                  return Positioned(
+                    left: 60 + radius * cos(angle),
+                    top: 60 + radius * sin(angle),
+                    child: Icon(Icons.star, size: 8, color: Colors.white70),
+                  );
+                }),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _LoadingTextState extends State<_LoadingText> {
@@ -469,8 +620,8 @@ class _LoadingTextState extends State<_LoadingText> {
   @override
   void initState() {
     super.initState();
-    funTexts.shuffle(); // shuffle once
-    randomTexts = funTexts.take(3).toList(); // pick 3 random ones
+    funTexts.shuffle();
+    randomTexts = funTexts.take(3).toList();
   }
 
   @override
@@ -490,7 +641,7 @@ class _LoadingTextState extends State<_LoadingText> {
     );
   }
 
-  /// Gradient text style (Purple → Pink)
+  /// Softer gradient (White → LightPink) for visibility on purple bg
   TextStyle _gradientTextStyle() {
     return TextStyle(
       fontSize: 18,
@@ -498,7 +649,7 @@ class _LoadingTextState extends State<_LoadingText> {
       foreground:
           Paint()
             ..shader = const LinearGradient(
-              colors: [Colors.purple, Colors.pinkAccent],
+              colors: [Colors.white, Color(0xFFFFB6C1)], // White → Light Pink
             ).createShader(const Rect.fromLTWH(0, 0, 200, 70)),
     );
   }
