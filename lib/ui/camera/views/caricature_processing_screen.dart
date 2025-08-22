@@ -172,7 +172,7 @@ Widget build(BuildContext context) {
 Widget _buildErrorUI(BuildContext context) {
   final screenWidth = MediaQuery.of(context).size.width;
   final screenHeight = MediaQuery.of(context).size.height;
-  final double animationSize = (screenWidth < screenHeight ? screenWidth : screenHeight) * 0.45;
+  final double animationSize = (screenWidth < screenHeight ? screenWidth : screenHeight) * 0.50;
 
   return Padding(
     padding: const EdgeInsets.symmetric(horizontal: 20),
