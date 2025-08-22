@@ -1,103 +1,3 @@
-// // import 'package:flutter/material.dart';
-// // import 'package:get/get.dart';
-// // import 'package:photo_booth/ui/camera/Camera_controller/camera_controller.dart';
-// // import 'package:photo_booth/ui/camera/widgets/timer_slider.dart';
-
-// // class CaricatureScreen extends StatelessWidget {
-// //   CaricatureScreen({super.key});
-// //   final GetCameraController _getCameraController =
-// //       Get.find<GetCameraController>();
-
-// //   @override
-// //   Widget build(BuildContext context) {
-// //     return Scaffold(
-// //       appBar: AppBar(title: const Text('Caricature Screen')),
-// //       body: Padding(
-// //         padding: const EdgeInsets.all(16.0),
-// //         child: Column(
-// //           mainAxisAlignment: MainAxisAlignment.center,
-// //           children: [
-// //             Obx(
-// //               () => TimerSlider(
-// //                 onChanged: (value) {
-// //                   _getCameraController.onTimerChange(value);
-// //                 },
-// //                 value: _getCameraController.timerValue.value,
-// //               ),
-// //             ),
-// //           ],
-// //         ),
-// //       ),
-// //     );
-// //   }
-// // } 
-
-// // caricature_screen.dart
-// import 'package:flutter/material.dart';
-// import 'package:get/get.dart';
-// import 'package:image_picker/image_picker.dart';
-// import 'dart:io';
-// import 'package:photo_booth/routes/app_route_names.dart';
-
-// class CaricatureScreen extends StatelessWidget {
-//   const CaricatureScreen({super.key});
-
-//   Future<void> _pickImage(BuildContext context, ImageSource source) async {
-//     final picker = ImagePicker();
-//     final pickedFile = await picker.pickImage(source: source);
-
-//     if (pickedFile != null) {
-//       // Navigate to processing screen
-//       Get.toNamed(
-//         AppRouteNames.caricatureProcessing,
-//         arguments: File(pickedFile.path),
-//       );
-//     }
-//   }
-
-//   void _showOptionsDialog(BuildContext context) {
-//     showModalBottomSheet(
-//       context: context,
-//       shape: RoundedRectangleBorder(
-//         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-//       ),
-//       builder: (context) {
-//         return Padding(
-//           padding: const EdgeInsets.all(20.0),
-//           child: Wrap(
-//             alignment: WrapAlignment.center,
-//             children: [
-//               ListTile(
-//                 leading: Icon(Icons.camera_alt),
-//                 title: Text("Take Photo"),
-//                 onTap: () => _pickImage(context, ImageSource.camera),
-//               ),
-//               ListTile(
-//                 leading: Icon(Icons.photo_library),
-//                 title: Text("Upload Photo"),
-//                 onTap: () => _pickImage(context, ImageSource.gallery),
-//               ),
-//             ],
-//           ),
-//         );
-//       },
-//     );
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(title: const Text("Caricature")),
-//       body: Center(
-//         child: ElevatedButton(
-//           onPressed: () => _showOptionsDialog(context),
-//           child: const Text("Select Photo Source"),
-//         ),
-//       ),
-//     );
-//   }
-// }
-
 // caricature_screen.dart
 import 'dart:async';
 import 'dart:io';
@@ -115,6 +15,7 @@ class CaricatureScreen extends StatefulWidget {
 
 class _CaricatureScreenState extends State<CaricatureScreen> {
   final ImagePicker _picker = ImagePicker();
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -123,7 +24,10 @@ class _CaricatureScreenState extends State<CaricatureScreen> {
   }
 
   Future<void> _startCameraFlow() async {
-    await Future.delayed(Duration(milliseconds: 500)); // small delay before opening camera
+    await Future.delayed(Duration(milliseconds: 500));
+    setState((){
+      isLoading = false;
+    }); // small delay before opening camera
     final XFile? capturedPhoto = await _picker.pickImage(source: ImageSource.camera);
 
     if (capturedPhoto != null) {
@@ -137,13 +41,63 @@ class _CaricatureScreenState extends State<CaricatureScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: Colors.white,
-      body: Center(
-        child: CircularProgressIndicator(), // optional loading
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    backgroundColor: Colors.transparent,
+    body: Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          // colors: [Color(0xFF8E2DE2), Color(0xFFDA22FF)],
+          colors: [Color(0xFF8E2DE2), Color(0xFFDA22FF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
       ),
-    );
-  }
+      child: isLoading? Center(
+        child: Container(
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.22),
+            borderRadius: BorderRadius.circular(25),
+            border: Border.all(color: Colors.white.withOpacity(0.35), width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 15,
+                offset: Offset(0, 7),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.deepPurpleAccent),
+                strokeWidth: 5,
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                "Launching Camera...",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  color: Colors.white,
+                  letterSpacing: 1.1,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black12,
+                      blurRadius: 8,
+                      offset: Offset(1, 3),
+                    ),
+                  ]
+                ),
+              ),
+            ],
+          ),
+        ),
+      ):const SizedBox.shrink(),
+    ),
+  );
+}
 }
