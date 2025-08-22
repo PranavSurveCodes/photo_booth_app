@@ -28,11 +28,30 @@ class _BoomerangScreenState extends State<BoomerangScreen> {
   XFile? recordedVideo;
   VideoPlayerController? _videoController;
   String? boomerangPath;
+  bool useFront = false;
 
   @override
   void initState() {
     super.initState();
     _initCamera();
+  }
+
+  Future<void> switchCamera(bool useFrontCam) async {
+    final cameras = await availableCameras();
+    final frontCamera = cameras.firstWhere(
+      (camera) => camera.lensDirection == CameraLensDirection.front,
+      orElse: () => cameras.first,
+    );
+    _cameraController = CameraController(
+      useFrontCam ? frontCamera : cameras.first,
+      ResolutionPreset.high,
+    );
+    await _cameraController!.initialize();
+    if (mounted) setState(() {});
+    useFront = useFrontCam;
+    // setState(() {
+    //   useFront = useFront;
+    // });
   }
 
   Future<void> _initCamera() async {
@@ -318,6 +337,14 @@ class _BoomerangScreenState extends State<BoomerangScreen> {
               if (shouldLeave) Navigator.of(context).pop();
             },
           ),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.cameraswitch),
+              onPressed: () {
+                switchCamera(useFront);
+              },
+            ),
+          ],
         ),
         body: Container(
           decoration: const BoxDecoration(
