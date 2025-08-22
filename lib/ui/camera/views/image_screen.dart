@@ -34,7 +34,18 @@ class _ImageScreenState extends State<ImageScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Image')),
+      appBar: AppBar(title: const Text('Image'),
+           flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF8E2DE2), Color(0xFFDA22FF)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        backgroundColor: Colors.transparent,
+      ),
       body: Builder(
         builder: (context) {
           final Size imageSize = _getCameraController.imageSize.value;
@@ -44,51 +55,61 @@ class _ImageScreenState extends State<ImageScreen> {
           );
         },
       ),
-      bottomSheet: BottomAppBar(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            IconButton(
-              onPressed: () async {
-                Overlay.of(context).insert(_loaderOverlayEntry);
-                final params = ShareParams(
-                  text: 'Great picture',
-                  files: [XFile(path)],
-                );
-                final result = await SharePlus.instance.share(params);
-                _loaderOverlayEntry.remove();
-                if (result.status == ShareResultStatus.success) {
-                  debugPrint('Thank you for sharing the picture!');
-                }
-              },
-              icon: Icon(Icons.ios_share),
+      bottomSheet: Ink(
+         decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF8E2DE2), Color(0xFFDA22FF)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            IconButton(
-              onPressed: () async {
-                Overlay.of(context).insert(_loaderOverlayEntry);
-                await Printing.layoutPdf(
-                  onLayout: (PdfPageFormat format) async {
-                    final imageBytes = await File(path).readAsBytes();
-                    final doc = pw.Document();
-                    final image = pw.MemoryImage(imageBytes);
-                    doc.addPage(
-                      pw.Page(
-                        pageFormat: format,
-                        build: (pw.Context context) {
-                          return pw.Center(
-                            child: pw.Image(image, fit: pw.BoxFit.contain),
-                          );
-                        },
-                      ),
-                    );
-                    return doc.save();
-                  },
-                );
-                _loaderOverlayEntry.remove();
-              },
-              icon: Icon(Icons.print),
-            ),
-          ],
+          ),
+        child: BottomAppBar(
+          color: Colors.transparent,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                onPressed: () async {
+                  Overlay.of(context).insert(_loaderOverlayEntry);
+                  final params = ShareParams(
+                    text: 'Great picture',
+                    files: [XFile(path)],
+                  );
+                  final result = await SharePlus.instance.share(params);
+                  _loaderOverlayEntry.remove();
+                  if (result.status == ShareResultStatus.success) {
+                    debugPrint('Thank you for sharing the picture!');
+                  }
+                },
+                icon: Icon(Icons.ios_share),
+              ),
+              IconButton(
+                onPressed: () async {
+                  Overlay.of(context).insert(_loaderOverlayEntry);
+                  await Printing.layoutPdf(
+                    onLayout: (PdfPageFormat format) async {
+                      final imageBytes = await File(path).readAsBytes();
+                      final doc = pw.Document();
+                      final image = pw.MemoryImage(imageBytes);
+                      doc.addPage(
+                        pw.Page(
+                          pageFormat: format,
+                          build: (pw.Context context) {
+                            return pw.Center(
+                              child: pw.Image(image, fit: pw.BoxFit.contain),
+                            );
+                          },
+                        ),
+                      );
+                      return doc.save();
+                    },
+                  );
+                  _loaderOverlayEntry.remove();
+                },
+                icon: Icon(Icons.print),
+              ),
+            ],
+          ),
         ),
       ),
     );
