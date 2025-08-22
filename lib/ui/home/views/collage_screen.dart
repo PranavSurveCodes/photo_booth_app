@@ -21,14 +21,12 @@ class CollageScreen extends StatefulWidget {
 }
 
 class _CollageScreenState extends State<CollageScreen> {
-  int? selectedTemplate;   // <-- add this
-  CollageType? selectedCollageType;
   int? selectedTemplateIndex;
+  CollageType? selectedCollageType;
   late int totalSlots;
   final ImagePicker _picker = ImagePicker();
   late List<XFile?> images;
   int currentTakingIndex = 0;
-
   final GlobalKey _collageKey = GlobalKey();
 
   @override
@@ -38,68 +36,40 @@ class _CollageScreenState extends State<CollageScreen> {
     selectedTemplateIndex = null;
     images = [];
     totalSlots = 0;
-    //_initCamera();
   }
+
   Future<void> _pickImage(int index) async {
-  final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
 
-  if (pickedFile != null) {
-    setState(() {
-      images[index] = pickedFile; // since images is List<XFile?>
-    });
-  } else {
-    // Reset collage state when user cancels
-    setState(() {
-      selectedTemplate = null;
-      images = []; // clear images
-    });
-    debugPrint("Image picking cancelled, resetting collage");
-  }
-}
-
-  Future<void> takePicturesForAllSlots() async {
-  // make sure images list has enough slots
-  if (images.length < totalSlots) {
-    images = List<XFile?>.filled(totalSlots, null);
-  }
-  for (int i = 0; i < totalSlots; i++) {
-    final XFile? picture = await _picker.pickImage(source: ImageSource.camera);
-
-    if (picture == null) {
-      // user canceled, stop the loop
-      break;
+    if (pickedFile != null) {
+      setState(() {
+        images[index] = pickedFile;
+      });
+    } else {
+      // Reset collage state when user cancels
+      setState(() {
+        selectedTemplateIndex = null;
+        images = [];
+      });
+      debugPrint("Image picking cancelled, resetting collage");
     }
-
-    setState(() {
-      images[i] = picture;
-      currentTakingIndex = i;
-    });
   }
-}
 
   Future<void> _saveOrShareCollage({bool share = false}) async {
     try {
-      // 1. Capture the collage widget as an image
       RenderRepaintBoundary boundary =
           _collageKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
-
       ui.Image image = await boundary.toImage(pixelRatio: 3.0);
-
-      // 2. Convert image to PNG byte data
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       final Uint8List pngBytes = byteData!.buffer.asUint8List();
-
-      // 3. Save the image to a temporary file
       final directory = await getTemporaryDirectory();
       final filePath = '${directory.path}/collage.png';
       final file = File(filePath);
       await file.writeAsBytes(pngBytes);
 
-      // 4. Share or just save
       if (share) {
         await Share.shareXFiles([XFile(filePath)], text: 'Check out my collage!');
       } else {
-        // If not sharing, you can save it to gallery or do something else
         print("Collage saved at: $filePath");
       }
     } catch (e) {
@@ -107,36 +77,14 @@ class _CollageScreenState extends State<CollageScreen> {
     }
   }
 
-
   void selectCollageType(CollageType type) {
     setState(() {
       selectedCollageType = type;
-      selectedTemplateIndex = null; // clear custom template
+      selectedTemplateIndex = null;
       totalSlots = (type == CollageType.twoByTwo) ? 4 : 9;
       images = List<XFile?>.filled(totalSlots, null);
       currentTakingIndex = 0;
     });
-  }
-
-  Future<void> takePicture([int? index]) async {
-    final XFile? picture = await _picker.pickImage(source: ImageSource.camera);
-    if (picture != null) {
-      setState(() {
-        if (index != null) {
-          currentTakingIndex = index;
-        }
-        // ensure correct length
-        if (images.length < totalSlots) {
-          images = List<XFile?>.from(images)
-            ..length = totalSlots;
-        }
-        images[currentTakingIndex] = picture;
-
-        // ✅ Find first empty slot after current
-        int nextIndex = images.indexWhere((img) => img == null);
-        currentTakingIndex = (nextIndex != -1) ? nextIndex : currentTakingIndex;
-      });
-    }
   }
 
   void deletePicture(int index) {
@@ -148,9 +96,7 @@ class _CollageScreenState extends State<CollageScreen> {
     });
   }
 
-  // IMPORTANT: this method must be INSIDE the State class so 'takePicture' and 'images' are in scope
   Widget buildCollage(CollageTemplate template, {bool isPreview = false}) {
-    // make sure we have a displayImages list sized to the template
     final displayImages = images.length == template.slots.length
         ? images
         : List<XFile?>.filled(template.slots.length, null);
@@ -224,203 +170,184 @@ class _CollageScreenState extends State<CollageScreen> {
     );
   }
 
-@override
-Widget build(BuildContext context) {
-  bool allSlotsFilled = images.isNotEmpty && images.every((img) => img != null);
+  @override
+  Widget build(BuildContext context) {
+    bool allSlotsFilled = images.isNotEmpty && images.every((img) => img != null);
 
-  return Scaffold(
-    extendBodyBehindAppBar: true,
-    appBar: AppBar(
-      title: const Text(
-        'Collage Screen',
-        style: TextStyle(
-          fontSize: 22,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        title: const Text(
+          'Collage Screen',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
-      centerTitle: true,
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-    ),
-    body: Container(
-      width: MediaQuery.sizeOf(context).width,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFFDA22FF), Color(0xFF9733EE)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
+      body: Container(
+        width: MediaQuery.sizeOf(context).width,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFFDA22FF), Color(0xFF9733EE)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
         ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 100, 16, 16),
-        child: Column(
-          children: [
-            // 🔹 Template Buttons
-            if (!allSlotsFilled)
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: List.generate(templates.length, (index) {
-                  // ✅ Place Template 9 between 7 and 8
-                  if (index == 8) {
-                    return Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white.withOpacity(0.9),
-                            foregroundColor: Colors.deepPurple,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            elevation: 4,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
-                            ),
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              selectedTemplateIndex = 8;
-                              selectedCollageType = null;
-                              totalSlots = templates[8].slots.length;
-                              images = List.generate(totalSlots, (_) => null);
-                              currentTakingIndex = 0;
-                            });
-                          },
-                          child: const Text('Template 9'),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 100, 16, 16),
+          child: Column(
+            children: [
+              // 🔹 Template Buttons
+              if (!allSlotsFilled)
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: List.generate(templates.length, (index) {
+                    return ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white.withOpacity(0.9),
+                        foregroundColor: Colors.deepPurple,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        elevation: 4,
+                        padding:
+                            const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          selectedTemplateIndex = index;
+                          selectedCollageType = null;
+                          totalSlots = templates[index].slots.length;
+                          images = List.generate(totalSlots, (_) => null);
+                          currentTakingIndex = 0;
+                        });
+                      },
+                      child: Text('Template ${index + 1}'),
+                    );
+                  }),
+                ),
+
+              const SizedBox(height: 20),
+
+              // 🔹 Collage Preview Area
+              Expanded(
+                child: RepaintBoundary(
+                  key: _collageKey,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 10,
+                          offset: Offset(0, 4),
                         ),
                       ],
-                    );
-                  }
-
-                  // Normal buttons for other templates
-                  return ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white.withOpacity(0.9),
-                      foregroundColor: Colors.deepPurple,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      elevation: 4,
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                     ),
-                    onPressed: () {
-                      setState(() {
-                        selectedTemplateIndex = index;
-                        selectedCollageType = null;
-                        totalSlots = templates[index].slots.length;
-                        images = List.generate(totalSlots, (_) => null);
-                        currentTakingIndex = 0;
-                      });
-                    },
-                    child: Text('Template ${index + 1}'),
-                  );
-                }),
-              ),
-
-            const SizedBox(height: 20),
-
-            // 🔹 Collage Preview Area
-            Expanded(
-              child: RepaintBoundary(
-                key: _collageKey,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black26,
-                        blurRadius: 10,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  padding: const EdgeInsets.all(8),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: selectedCollageType != null
-                        ? CollageFrame(
-                            rows: (selectedCollageType == CollageType.twoByTwo) ? 2 : 3,
-                            cols: (selectedCollageType == CollageType.twoByTwo) ? 2 : 3,
-                            images: images,
-                            onDelete: deletePicture,
-                            onTap: (index) {
-                              setState(() {
-                                currentTakingIndex = index;
-                              });
-                              takePicture(index);
-                            },
-                            isPreview: allSlotsFilled, // ✅ hide delete when final
-                          )
-                        : (selectedTemplateIndex != null
-                            ? buildCollage(templates[selectedTemplateIndex!],
-                              isPreview: allSlotsFilled, // ✅ pass preview flag
-                            )
-                            : Center(
-                                child: Text(
-                                  'Select a collage type or template',
-                                  style: TextStyle(
-                                    color: Colors.grey.shade600,
-                                    fontSize: 16,
+                    padding: const EdgeInsets.all(8),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: selectedCollageType != null
+                          ? CollageFrame(
+                              rows: (selectedCollageType == CollageType.twoByTwo) ? 2 : 3,
+                              cols: (selectedCollageType == CollageType.twoByTwo) ? 2 : 3,
+                              images: images,
+                              onDelete: deletePicture,
+                              onTap: (index) async {
+                                setState(() => currentTakingIndex = index);
+                                // Open CameraCaptureScreen for single shot
+                                final cameras = await availableCameras();
+                                if (cameras.isEmpty) return;
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => CameraCaptureScreen(
+                                      totalShots: 1,
+                                      interval: const Duration(seconds: 1),
+                                      onPicturesTaken: (captured) {
+                                        if (captured.isNotEmpty) {
+                                          setState(() {
+                                            images[currentTakingIndex] = captured.first;
+                                          });
+                                        }
+                                      },
+                                    ),
                                   ),
-                                ),
-                              )),
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // 🔹 Capture Button
-            if ((selectedCollageType != null || selectedTemplateIndex != null) &&
-                images.any((img) => img == null))
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurple,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 14,
-                  ),
-                ),
-                onPressed: () async {
-                  final cameras = await availableCameras();
-                  if (cameras.isEmpty) return;
-
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => CameraCaptureScreen(
-                        camera: cameras.first,
-                        totalShots: totalSlots,
-                        interval: const Duration(seconds: 3),
-                        onPicturesTaken: (captured) {
-                          setState(() {
-                            for (int i = 0; i < totalSlots && i < captured.length; i++) {
-                              images[i] = captured[i];
-                            }
-                          });
-                        },
-                      ),
+                                );
+                              },
+                              isPreview: allSlotsFilled,
+                            )
+                          : (selectedTemplateIndex != null
+                              ? buildCollage(templates[selectedTemplateIndex!],
+                                  isPreview: allSlotsFilled)
+                              : Center(
+                                  child: Text(
+                                    'Select a collage type or template',
+                                    style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                )),
                     ),
-                  );
-                },
-                icon: const Icon(Icons.camera_alt, size: 22),
-                label: const Text(
-                  'Start Collage Capture',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
 
-            const SizedBox(height: 16),
-            // 🔹 Only Share Button
+              const SizedBox(height: 20),
+
+              // 🔹 Capture Button
+              if ((selectedCollageType != null || selectedTemplateIndex != null) &&
+                  images.any((img) => img == null))
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurple,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 14,
+                    ),
+                  ),
+                  onPressed: () async {
+                    if (totalSlots == 0) return;
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => CameraCaptureScreen(
+                          totalShots: totalSlots,
+                          interval: const Duration(seconds: 3),
+                          onPicturesTaken: (captured) {
+                            setState(() {
+                              for (int i = 0;
+                                  i < totalSlots && i < captured.length;
+                                  i++) {
+                                images[i] = captured[i];
+                              }
+                            });
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.camera_alt, size: 22),
+                  label: const Text(
+                    'Start Collage Capture',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+
+              const SizedBox(height: 16),
+              // 🔹 Only Share Button
             if (images.isNotEmpty && images.every((img) => img != null))
               Center(
               child: SizedBox(
