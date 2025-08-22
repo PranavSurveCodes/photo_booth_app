@@ -1,3 +1,4 @@
+// routes/ app_routes_names.dart
 abstract class AppRouteNames {
   static final String home = '/';
 
@@ -11,4 +12,7 @@ abstract class AppRouteNames {
   static final String collageCamera = '/collageCamera';
   static final String image = '/image';
   static final String frame = '/frame';
+  static final String caricatureProcessing = '/caricatureProcessing';
+  static final String caricatureResult = '/caricatureResult';
+
 }
