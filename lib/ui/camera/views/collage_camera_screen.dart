@@ -70,25 +70,7 @@ class _CollageCameraScreenState extends State<CollageCameraScreen> {
           
         });
       }
-
-      // _cameraController?.dispose();
-      // Navigator.pushReplacement(
-      //   context,
-      //   MaterialPageRoute(
-      //     builder: (context) => CameraScreen(images: _images),
-      //   ),
-      // );
     }
-
-    // final path = await saveScreenshot();
-
-    // if (path != null && mounted) {
-    //   debugPrint('Screen Short Image is :$path');
-
-    //   _loaderOverlayEntry.remove();
-    // } else {
-    //   _loaderOverlayEntry.remove();
-    // }
   }
 
   Future<void> _initCamera() async {
