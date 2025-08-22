@@ -20,7 +20,7 @@ class CameraScreen extends StatefulWidget {
 }
 
 class _CameraScreenState extends State<CameraScreen> {
-  final GetCameraController _getCameraController = Get.find<GetCameraController >();
+  final GetCameraController _getCameraController = Get.find<GetCameraController>();
   CameraController? _cameraController;
   late final List<CameraDescription> cameras;
   late OverlayEntry _loaderOverlayEntry;
@@ -38,13 +38,13 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
   void _startCountdown() {
-    Timer.periodic(Duration(seconds: 1), (timer) async {
+    Timer.periodic(const Duration(seconds: 1), (timer) async {
       if (_countdown == 0) {
         timer.cancel();
         setState(() {
           _isCounting = false;
         });
-        await Future.delayed(Duration(milliseconds: 400));
+        await Future.delayed(const Duration(milliseconds: 400));
         await _takePicture();
       } else {
         setState(() {
@@ -84,10 +84,7 @@ class _CameraScreenState extends State<CameraScreen> {
 
     if (path != null && mounted) {
       debugPrint('Screen Short Image is :$path');
-
-      // context.pushNamed(AppRouteNames.frame, extra: path);
-      Get.toNamed(AppRouteNames.frame,arguments: path);
-
+      Get.toNamed(AppRouteNames.frame, arguments: path);
       _loaderOverlayEntry.remove();
     } else {
       _loaderOverlayEntry.remove();
@@ -97,12 +94,18 @@ class _CameraScreenState extends State<CameraScreen> {
   @override
   Widget build(BuildContext context) {
     if (_cameraController == null ||
-        _cameraController != null && !_cameraController!.value.isInitialized) {
+        (_cameraController != null && !_cameraController!.value.isInitialized)) {
       return const Center(child: CircularProgressIndicator());
     }
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Take Picture'),
+        elevation: 0,
+        title: const Text(
+          'Take Picture',
+          style: TextStyle(color: Colors.white),
+        ),
+        centerTitle: true,
         actions: [
           IconButton(
             onPressed: () {
@@ -116,10 +119,22 @@ class _CameraScreenState extends State<CameraScreen> {
                 _isFrontCamera = !_isFrontCamera;
               });
             },
-            icon: Icon(Icons.switch_camera),
+            icon: const Icon(Icons.switch_camera),
+            color: Colors.white,
           ),
         ],
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF8E2DE2), Color(0xFFDA22FF)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        backgroundColor: Colors.transparent,
       ),
+
       body: RepaintBoundary(
         key: _repaintKey,
         child: Stack(
@@ -138,17 +153,47 @@ class _CameraScreenState extends State<CameraScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        shape: CircleBorder(),
-        onPressed: _takePicture,
-        child: const Icon(Icons.camera),
+
+      // ✅ Gradient FAB
+      floatingActionButton: Container(
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: LinearGradient(
+            colors: [Color(0xFF8E2DE2), Color(0xFFDA22FF)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: FloatingActionButton(
+          shape: const CircleBorder(),
+          onPressed: _takePicture,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: const Icon(Icons.camera, color: Colors.white),
+        ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomSheet: BottomAppBar(
-        shape: CircularNotchedRectangle(),
-        notchMargin: 4,
 
-        child: Row(mainAxisSize: MainAxisSize.max, children: []),
+      // ✅ Gradient BottomAppBar
+      bottomSheet: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF8E2DE2), Color(0xFFDA22FF)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: BottomAppBar(
+          color: Colors.transparent,
+          shape: const CircularNotchedRectangle(),
+          notchMargin: 4,
+          child: Row(
+            mainAxisSize: MainAxisSize.max,
+            children: const [
+              SizedBox(height: 50),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -156,9 +201,8 @@ class _CameraScreenState extends State<CameraScreen> {
   Future<Uint8List?> capturePng() async {
     try {
       RenderRepaintBoundary boundary =
-          _repaintKey.currentContext!.findRenderObject()
-              as RenderRepaintBoundary;
-      final image = await boundary.toImage(pixelRatio: 3.0); // High-res
+          _repaintKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      final image = await boundary.toImage(pixelRatio: 3.0);
       ByteData? byteData = await image.toByteData(format: ImageByteFormat.png);
       return byteData?.buffer.asUint8List();
     } catch (e) {
@@ -189,24 +233,27 @@ class AnimatedCounter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedSwitcher(
-      duration: Duration(milliseconds: 700),
-      transitionBuilder:
-          (child, animation) => ScaleTransition(
-            scale: CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeOutBack,
-            ),
-            child: FadeTransition(opacity: animation, child: child),
-          ),
+      duration: const Duration(milliseconds: 700),
+      transitionBuilder: (child, animation) => ScaleTransition(
+        scale: CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutBack,
+        ),
+        child: FadeTransition(opacity: animation, child: child),
+      ),
       child: Text(
         '$countdown',
         key: ValueKey<int>(countdown),
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 100,
           color: Colors.white,
           fontWeight: FontWeight.bold,
           shadows: [
-            Shadow(blurRadius: 12, color: Colors.black54, offset: Offset(3, 3)),
+            Shadow(
+              blurRadius: 12,
+              color: Colors.black54,
+              offset: Offset(3, 3),
+            ),
           ],
         ),
       ),
