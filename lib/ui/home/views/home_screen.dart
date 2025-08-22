@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:photo_booth/config/app_enums.dart';
 import 'package:photo_booth/routes/app_route_names.dart';
+import 'package:photo_booth/ui/boomerang/boomerang_screen.dart';
 import 'package:photo_booth/ui/home/widgets/app_selection_tile.dart';
 
 class HomeScreen extends StatelessWidget {

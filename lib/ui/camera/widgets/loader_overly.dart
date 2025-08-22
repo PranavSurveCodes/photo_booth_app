@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class LoaderOverlay extends StatelessWidget {
   const LoaderOverlay({super.key});
@@ -7,9 +8,11 @@ class LoaderOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // Optional: semi-transparent background
-        ModalBarrier(dismissible: false, color: Colors.black.withOpacity(0.5)),
-        const Center(child: CircularProgressIndicator()),
+        ModalBarrier(
+          dismissible: false,
+          color: Colors.black.withValues(alpha: 0.5),
+        ),
+        const Center(child: SpinKitCircle(color: Colors.purple, size: 60.0)),
       ],
     );
   }

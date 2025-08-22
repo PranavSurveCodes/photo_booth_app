@@ -227,7 +227,7 @@ class _CameraScreenState extends State<CameraScreen> {
 }
 
 class AnimatedCounter extends StatelessWidget {
-  const AnimatedCounter({required this.countdown});
+  const AnimatedCounter({super.key, required this.countdown}); 
   final int countdown;
 
   @override
