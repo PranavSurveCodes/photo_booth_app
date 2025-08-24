@@ -16,10 +16,7 @@ class MyApp extends StatelessWidget {
           backgroundColor: Colors.purple,
           foregroundColor: Colors.white,
         ),
-        bottomAppBarTheme: BottomAppBarThemeData(
-          color: Colors.purple,
-          height: 66,
-        ),
+        bottomAppBarTheme: BottomAppBarTheme(color: Colors.purple, height: 66),
         floatingActionButtonTheme: FloatingActionButtonThemeData(
           backgroundColor: Colors.purple,
           foregroundColor: Colors.white,

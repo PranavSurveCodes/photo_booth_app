@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math';
+import 'dart:developer' as dev;
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:video_player/video_player.dart';
@@ -28,7 +29,7 @@ class _BoomerangScreenState extends State<BoomerangScreen> {
   XFile? recordedVideo;
   VideoPlayerController? _videoController;
   String? boomerangPath;
-  bool useFront = false;
+  bool useFront = true;
 
   @override
   void initState() {
@@ -42,16 +43,17 @@ class _BoomerangScreenState extends State<BoomerangScreen> {
       (camera) => camera.lensDirection == CameraLensDirection.front,
       orElse: () => cameras.first,
     );
+    dev.log('usefront: $useFrontCam');
     _cameraController = CameraController(
       useFrontCam ? frontCamera : cameras.first,
       ResolutionPreset.high,
     );
     await _cameraController!.initialize();
-    if (mounted) setState(() {});
-    useFront = useFrontCam;
-    // setState(() {
-    //   useFront = useFront;
-    // });
+    if (mounted) {
+      setState(() {
+        useFront = !useFront;
+      });
+    }
   }
 
   Future<void> _initCamera() async {

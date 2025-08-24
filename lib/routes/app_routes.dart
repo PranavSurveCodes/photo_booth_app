@@ -1,6 +1,7 @@
 // routes/ app_routes.dart
 import 'package:get/route_manager.dart';
 import 'package:photo_booth/routes/app_route_names.dart';
+import 'package:photo_booth/ui/boomerang/boomerang_screen.dart';
 import 'package:photo_booth/ui/camera/views/ar_screen.dart';
 import 'package:photo_booth/ui/camera/views/camera_screen.dart';
 import 'package:photo_booth/ui/camera/views/collage_camera_screen.dart';
@@ -25,11 +26,21 @@ class AppRoutes {
     GetPage(name: AppRouteNames.caricature, page: () => CaricatureScreen()),
     GetPage(name: AppRouteNames.collage, page: () => CollageScreen()),
     GetPage(name: AppRouteNames.camera, page: () => CameraScreen()),
-    GetPage(name: AppRouteNames.collageCamera, page: () => CollageCameraScreen()),
+    GetPage(
+      name: AppRouteNames.collageCamera,
+      page: () => CollageCameraScreen(),
+    ),
     GetPage(name: AppRouteNames.frame, page: () => FrameSelectionScreen()),
     GetPage(name: AppRouteNames.image, page: () => ImageScreen()),
-    GetPage(name: AppRouteNames.caricatureProcessing, page: () => CaricatureProcessingScreen()),
-    GetPage(name: AppRouteNames.caricatureResult, page: () => CaricatureResultScreen()),
+    GetPage(
+      name: AppRouteNames.caricatureProcessing,
+      page: () => CaricatureProcessingScreen(),
+    ),
+    GetPage(
+      name: AppRouteNames.caricatureResult,
+      page: () => CaricatureResultScreen(),
+    ),
+    GetPage(name: AppRouteNames.boomerang, page: () => BoomerangScreen()),
   ];
 }
 

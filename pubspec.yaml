@@ -45,6 +45,12 @@ dependencies:
   http: ^1.2.1
   dio: ^5.9.0
   flutter_dotenv: ^6.0.0
+  path_provider: ^2.1.5
+  camera: ^0.11.2
+  flutter_spinkit: ^5.2.2
+  ffmpeg_kit_flutter_new: ^3.2.0
+  video_player: ^2.10.0
+  animated_text_kit: ^4.2.3
   
 dev_dependencies:
   flutter_test:

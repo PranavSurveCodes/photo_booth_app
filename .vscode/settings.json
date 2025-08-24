@@ -8,5 +8,6 @@
     // Optional: ensure Dart uses the built-in formatter
     "dart.lineLength": 80,
     "dart.formatOnSave": true,
-    "dart.formatOnType": true
+    "dart.formatOnType": true,
+    "dart.flutterSdkPath": "~/Development/flutter"
 }
